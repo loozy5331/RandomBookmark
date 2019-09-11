@@ -1,15 +1,32 @@
 
+// Array를 무작위로 섞어줌. 동작은 분석해봐야 함.
+Array.prototype.shuffle = function(){
+  return this.concat().sort(
+    function(){return Math.random() - Math.random();}
+  );
+}
+
 // 폴더로 select 객체를 채움.
 function init_bookmark_folders(){
   var temp_select_list = $('<select id="bookmark-folder">');
   chrome.bookmarks.getTree(function(bookmarkTreeNodes){
     var folder_list = traverseBookmarks(bookmarkTreeNodes, temp_select_list);
     $(".input-wrapper").append(folder_list);
-  });
-  temp_select_list.change(function (){
-    get_cache();
-    dumpBookmarks($("#bookmark-folder option:selected").val());
-    set_init_event();  
+
+    // cache에서 불러오기
+    chrome.storage.sync.get(function(data){
+      dumpBookmarks(data.bookmark_folder);
+      $('#bookmark-folder option[value="' + data.bookmark_folder + '"]').prop("selected", true);
+    });
+
+    $('#bookmark-folder').change(function () {
+      $('#bookmarks').empty();
+      dumpBookmarks($("#bookmark-folder option:selected").val());
+      // 변경이 있을 때마다 저장하기
+      chrome.storage.sync.set({
+        "bookmark_folder": $("#bookmark-folder option:selected").val()
+      });
+    });
   });
 }
 
@@ -29,27 +46,6 @@ function traverseBookmarks(bookmarkTreeNodes, temp_select_list) {
   return temp_select_list
 }
 
-// cache를 통해 data를 불러오기
-function get_cache(){
-  chrome.storage.sync.get(function(data){
-    $("#bookmark-folder option:selected").val(data.bookmark_folder);
-  });
-}
-
-function set_init_event(){
-  get_cache();
-  dumpBookmarks($("#bookmark-folder option:selected").val());
-
-  $('#bookmark-folder').on('change', function () {
-    $('#bookmarks').empty();
-    dumpBookmarks($("#bookmark-folder option:selected").val());
-    // 변경이 있을 때마다 저장하기
-    chrome.storage.sync.set({
-      "bookmark_folder": $("#bookmark-folder option:selected").val()
-    });
-  });
-}
-
 function dumpBookmarks(query) {
   var bookmarkTreeNodes = chrome.bookmarks.getTree(
     function(bookmarkTreeNodes) {
@@ -61,12 +57,22 @@ function dumpTreeNodes(bookmarkNodes, query) {
   for (var i=0;i < bookmarkNodes.length;++i) {
     if(String(bookmarkNodes[i].title).indexOf(query) != -1){
       chrome.bookmarks.getChildren(bookmarkNodes[i].id, function(childs){
+        var list = $('<ul>');
+        var temp_list = new Array();
         for(var c=0;c<childs.length;++c){
           var bookmarks = $("#bookmarks");
-          var list = $('<ul>');
           if(childs[c].url){ // sub-folder는 제외
-            list.append(dumpNode(childs[c]));
+            //list.append(dumpNode(childs[c]));
+            temp_list.push(dumpNode(childs[c]));
           }
+          bookmarks.append(list);
+        }
+        // 섞어줌.
+        temp_list = temp_list.shuffle();
+        for(var j=0; j<(temp_list.length < 5?temp_list.length: 5);++j){
+          list.append(temp_list[j]);
+        }
+        if(temp_list.length > 0){
           bookmarks.append(list);
         }
       });
@@ -89,7 +95,6 @@ function dumpNode(bookmarkNode){
   var li = $(bookmarkNode.title ? '<li>' : '<div>').append(span);
   return li;
 }
-
 
 
 document.addEventListener('DOMContentLoaded', function () {
