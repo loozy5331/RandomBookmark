@@ -18,13 +18,14 @@ function getBookmark_folders(){
   });
 }
 
-// chrome.storage.sync를 통해 Cache로 저장되어있던 bookmark_folder 정보를 가져오고,
+// chrome.storage.sync를 통해 Cache로 저장되어있던 bookmark_folder와 bookmark_num 정보를 가져오고,
 // bookmark-contents에 해당 bookmark_folder에 있는 링크들을 dump 함.
-function get_choosen_folder(){
+function get_choosen_cache(){
   return new Promise(function(resolve, reject){
     chrome.storage.sync.get((data)=>{
       resolve(data.bookmark_folder);
       $('#bookmark-folder option[value=' + data.bookmark_folder + ']').prop("selected", true);
+      $('#bookmark-num option[value=' + data.bookmark_num + ']').prop("selected", true);
     })
   });
 }
@@ -37,6 +38,17 @@ function add_bookmark_folder_change(){
 
     chrome.storage.sync.set({
       "bookmark_folder": $("#bookmark-folder option:selected").val()
+    });
+  });
+}
+
+function add_bookmark_num_change(){
+  $('.bookmark-nums').change(function(){
+    $('.bookmark-contents').empty();
+    dumpBookmarks($("#bookmark-folder option:selected").val());
+
+    chrome.storage.sync.set({
+      "bookmark_num": $("#bookmark-num option:selected").val()
     });
   });
 }
@@ -58,40 +70,34 @@ function traverseBookmarks(bookmarkTreeNodes, temp_select_list) {
   return temp_select_list
 }
 
-
-function dumpBookmarks(query) {
+// folder_name에 해당하는 링크들을 가져온다.
+function dumpBookmarks(folder_name) {
   chrome.bookmarks.getTree(
     function(bookmarkTreeNodes) {
-      dumpTreeNodes(bookmarkTreeNodes, query);
+      dumpTreeNodes(bookmarkTreeNodes, folder_name);
     });
 }
 
-function dumpTreeNodes(bookmarkNodes, query) {
-  for (var i=0;i < bookmarkNodes.length;++i) {
-    if(String(bookmarkNodes[i].title).indexOf(query) != -1){
-      chrome.bookmarks.getChildren(bookmarkNodes[i].id, function(childs){
+function dumpTreeNodes(bookmarkNodes, folder_name) {
+  for (var bookmarkNode of bookmarkNodes) {
+    if(String(bookmarkNode.title).indexOf(folder_name) != -1){
+      chrome.bookmarks.getChildren(bookmarkNode.id, function(childs){
+        var bookmark_contents = $(".bookmark-contents");
+        var bookmark_num = parseInt($("#bookmark-num").val());
         var list = $('<ul>');
-        var temp_list = new Array();
-        for(var c=0;c<childs.length;++c){
-          var bookmarks = $(".bookmark-contents");
-          if(childs[c].url){ // sub-folder는 제외
-            //list.append(dumpNode(childs[c]));
-            temp_list.push(dumpNode(childs[c]));
-          }
-          bookmarks.append(list);
+        var temp_list = [];
+        for(var child of childs)
+          if(child.url) temp_list.push(dumpNode(child));  // sub-folder는 제외 
+        
+        temp_list = temp_list.shuffle();                  // 섞어줌.
+        for(var j in temp_list){
+          if(j < bookmark_num) list.append(temp_list[j]); // bookmark_num 보다 작으면 전부 넣고, 아니면 bookmark_num까지.
         }
-        // 섞어줌.
-        temp_list = temp_list.shuffle();
-        for(var j=0; j<(temp_list.length < 5?temp_list.length: 5);++j){
-          list.append(temp_list[j]);
-        }
-        if(temp_list.length > 0){
-          bookmarks.append(list);
-        }
+        bookmark_contents.append(list);
       });
     }
-    if(bookmarkNodes[i].children && bookmarkNodes[i].children.length > 0){
-      dumpTreeNodes(bookmarkNodes[i].children, query);
+    else if(bookmarkNode.children && bookmarkNode.children.length > 0){
+      dumpTreeNodes(bookmarkNode.children, folder_name);
     }
   }
 }
@@ -112,8 +118,9 @@ function dumpNode(bookmarkNode){
 
 // 폴더로 select 객체를 채움.
 function main(){
-  getBookmark_folders().then(get_choosen_folder).then(dumpBookmarks);
+  getBookmark_folders().then(get_choosen_cache).then(dumpBookmarks);
   add_bookmark_folder_change();
+  add_bookmark_num_change();
 }
 
 document.addEventListener('DOMContentLoaded', function () {
