@@ -4,68 +4,6 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
   <script src="script.js"></script>
   <link rel="stylesheet" href="reset.css">
-  <style>
-    /* init-tags */
-    body{
-      margin: 0;
-    }
-
-    ul{
-      list-style-type: none;
-    }
-
-    a{
-      text-decoration: none;
-    }
-
-    /* .input-wrapper */
-    .input-wrapper{
-      display: inline-block;
-      width: 100%;
-      height: 20px;
-      padding-left: 20px;
-      background-color: skyblue;
-    }
-
-    /* bookmarks */
-    #bookmarks {
-      display: inline-block;
-      width: 100%;
-      height: 300px;
-      overflow: scroll;
-    }
-
-    #bookmarks ul{
-      
-    }
-
-    #bookmarks ul li{
-      display: inline-block;
-      width: 90%;
-      padding: 10px 5px;
-      font-size: 15px;
-    }
-    #bookmarks ul li::before{
-      content: "##  ";
-    }
-
-    #bookmarks ul li:nth-child( 1 ) span a{
-      color: red;
-    }
-
-    #bookmarks ul li:nth-child( 2 ) span a{
-      color: orange;
-    }
-    #bookmarks ul li:nth-child( 3 ) span a{
-      color: purple;
-    }
-    #bookmarks ul li:nth-child( 4 ) span a{
-      color: green;
-    }
-    #bookmarks ul li:nth-child( 5 ) span a{
-      color: blue;
-    }
-  </style>
   <link rel="stylesheet" href="style.css">
 </head>
 <body style="width: 400px">
@@ -73,11 +11,11 @@
     <div class="logo">
       <h2>LOGO</h2>
     </div>
-    <div class="bookmark-folders">
+    <div class="bookmark-folders box">
     </div>
-    <div class="bookmark-nums">
+    <div class="bookmark-nums box">
       <select name="" id="bookmark-num">
-        <!-- <option value="3">3</option> -->
+        <option value="3">3</option>
         <option value="5">5</option>
         <option value="7">7</option>
       </select>

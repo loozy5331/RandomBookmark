@@ -15,25 +15,60 @@ gnb.gnb{
 
     height: 40px;
 
-    background-color: green;
+    background-color: #403336;
 }
 
 gnb.gnb .logo {
+    color: #D9D5D2;
+
+    padding-left: 10px;
     margin-right: auto;
     line-height: 40px;
 }
 
 gnb.gnb .bookmark-folders{
     margin-left: auto;
-    line-height: 40px;
+    margin-top: auto;
+    margin-bottom: auto;
 }
 
-gnb.gnb .bookmark-num{
-    margin-left: auto;
-    line-height: 40px;
+
+gnb.gnb .bookmark-nums{
+    margin-right: 15px;
+    margin-left: 10px;
+    margin-top: auto;
+    margin-bottom: auto;
 }
+
+gnb.gnb > * > select{
+    background: #403336;
+    border: 1px solid white;
+    color: white;
+}
+
 
 /* .bookmark-contents */
 .bookmark-contents {
-    margin-left: 10px;
+    margin: 10px;
+}
+
+.bookmark-contents ul li{
+    display: flex;
+    flex-direction: column;
+
+    margin-bottom: 15px;
+    padding: 2px;
+}
+
+.bookmark-contents ul li:hover{
+    border: 2px solid #A6A1A1;
+    margin-bottom: 14px;
+}
+
+.bookmark-contents ul li span a{
+    text-decoration: none;
+    color: #1C2026;
+
+    font-size: 14px;
+    font-family: Arial, Helvetica, sans-serif;
 }
