@@ -6,7 +6,8 @@ Array.prototype.shuffle = function(){
   );
 }
 
-function getBookmarks(){
+// chrome.bookmark로 북마크 폴더들을 불러오기
+function getBookmark_folders(){
   return new Promise(function(resolve, reject){
     chrome.bookmarks.getTree(function(bookmarkTreeNodes){
       var temp_select_list = $('<select id="bookmark-folder">');
@@ -17,17 +18,9 @@ function getBookmarks(){
   });
 }
 
-function bookmark_change(){
-  $('.bookmark-folders').change(function () {
-    $('.bookmark-contents').empty();
-    dumpBookmarks($("#bookmark-folder option:selected").val());
-    chrome.storage.sync.set({
-      "bookmark_folder": $("#bookmark-folder option:selected").val()
-    });
-  });
-}
-
-function getCache(){
+// chrome.storage.sync를 통해 Cache로 저장되어있던 bookmark_folder 정보를 가져오고,
+// bookmark-contents에 해당 bookmark_folder에 있는 링크들을 dump 함.
+function get_choosen_folder(){
   return new Promise(function(resolve, reject){
     chrome.storage.sync.get((data)=>{
       resolve(data.bookmark_folder);
@@ -36,30 +29,38 @@ function getCache(){
   });
 }
 
-// 폴더로 select 객체를 채움.
-function init_bookmark_folders(){
-  getBookmarks().then(getCache).then(dumpBookmarks);
-  bookmark_change();
+// bookmark-folder가 바뀔 때마다 내용을 변경하는 이벤트 적용.
+function add_bookmark_folder_change(){
+  $('.bookmark-folders').change(function () {
+    $('.bookmark-contents').empty();
+    dumpBookmarks($("#bookmark-folder option:selected").val());
+
+    chrome.storage.sync.set({
+      "bookmark_folder": $("#bookmark-folder option:selected").val()
+    });
+  });
 }
 
-// 폴더만 option에 넣고 select 객체로 반환
+
+// bookmark에서 폴더만 option에 넣고 select 객체로 반환
 function traverseBookmarks(bookmarkTreeNodes, temp_select_list) {
-  for(var i=0;i<bookmarkTreeNodes.length;i++) {
-    if(bookmarkTreeNodes[i].children) {
-      if(bookmarkTreeNodes[i].title != ""){
+  for(var bookmarkNode of bookmarkTreeNodes) {
+    if(bookmarkNode.children) {
+      if(bookmarkNode.title != ""){
         var option = $('<option>');
-        option.attr("value", bookmarkTreeNodes[i].title);
-        option.text(bookmarkTreeNodes[i].title);
+        option.attr("value", bookmarkNode.title);
+        option.text(bookmarkNode.title);
         temp_select_list.append(option);
       }
-      traverseBookmarks(bookmarkTreeNodes[i].children, temp_select_list);
+      traverseBookmarks(bookmarkNode.children, temp_select_list);
     } 
   }
   return temp_select_list
 }
 
+
 function dumpBookmarks(query) {
-  var bookmarkTreeNodes = chrome.bookmarks.getTree(
+  chrome.bookmarks.getTree(
     function(bookmarkTreeNodes) {
       dumpTreeNodes(bookmarkTreeNodes, query);
     });
@@ -109,7 +110,13 @@ function dumpNode(bookmarkNode){
 }
 
 
+// 폴더로 select 객체를 채움.
+function main(){
+  getBookmark_folders().then(get_choosen_folder).then(dumpBookmarks);
+  add_bookmark_folder_change();
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   $('.bookmark-contents').empty();
-  init_bookmark_folders();
+  main();
 });
