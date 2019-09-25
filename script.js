@@ -6,28 +6,40 @@ Array.prototype.shuffle = function(){
   );
 }
 
-// 폴더로 select 객체를 채움.
-function init_bookmark_folders(){
-  var temp_select_list = $('<select id="bookmark-folder">');
-  chrome.bookmarks.getTree(function(bookmarkTreeNodes){
-    var folder_list = traverseBookmarks(bookmarkTreeNodes, temp_select_list);
-    $(".input-wrapper").append(folder_list);
+function getBookmarks(){
+  return new Promise(function(resolve, reject){
+    chrome.bookmarks.getTree(function(bookmarkTreeNodes){
+      var temp_select_list = $('<select id="bookmark-folder">');
+      var folder_list = traverseBookmarks(bookmarkTreeNodes, temp_select_list);
+      $(".bookmark-folders").append(folder_list);
+      resolve()
+    })
+  });
+}
 
-    // cache에서 불러오기
-    chrome.storage.sync.get(function(data){
-      dumpBookmarks(data.bookmark_folder);
-      $('#bookmark-folder option[value="' + data.bookmark_folder + '"]').prop("selected", true);
-    });
-
-    $('#bookmark-folder').change(function () {
-      $('#bookmarks').empty();
-      dumpBookmarks($("#bookmark-folder option:selected").val());
-      // 변경이 있을 때마다 저장하기
-      chrome.storage.sync.set({
-        "bookmark_folder": $("#bookmark-folder option:selected").val()
-      });
+function bookmark_change(){
+  $('.bookmark-folders').change(function () {
+    $('.bookmark-contents').empty();
+    dumpBookmarks($("#bookmark-folder option:selected").val());
+    chrome.storage.sync.set({
+      "bookmark_folder": $("#bookmark-folder option:selected").val()
     });
   });
+}
+
+function getCache(){
+  return new Promise(function(resolve, reject){
+    chrome.storage.sync.get((data)=>{
+      resolve(data.bookmark_folder);
+      $('#bookmark-folder option[value=' + data.bookmark_folder + ']').prop("selected", true);
+    })
+  });
+}
+
+// 폴더로 select 객체를 채움.
+function init_bookmark_folders(){
+  getBookmarks().then(getCache).then(dumpBookmarks);
+  bookmark_change();
 }
 
 // 폴더만 option에 넣고 select 객체로 반환
@@ -60,7 +72,7 @@ function dumpTreeNodes(bookmarkNodes, query) {
         var list = $('<ul>');
         var temp_list = new Array();
         for(var c=0;c<childs.length;++c){
-          var bookmarks = $("#bookmarks");
+          var bookmarks = $(".bookmark-contents");
           if(childs[c].url){ // sub-folder는 제외
             //list.append(dumpNode(childs[c]));
             temp_list.push(dumpNode(childs[c]));
@@ -98,6 +110,6 @@ function dumpNode(bookmarkNode){
 
 
 document.addEventListener('DOMContentLoaded', function () {
-  $('#bookmarks').empty();
+  $('.bookmark-contents').empty();
   init_bookmark_folders();
 });

@@ -1,0 +1,39 @@
+/* body */
+body{
+    display: flex;
+    flex-direction: column;
+
+    max-height: 500px;
+    overflow-y: scroll;
+}
+
+
+/* gnb.gnb */
+gnb.gnb{
+    display: flex;
+    flex-direction: row;
+
+    height: 40px;
+
+    background-color: green;
+}
+
+gnb.gnb .logo {
+    margin-right: auto;
+    line-height: 40px;
+}
+
+gnb.gnb .bookmark-folders{
+    margin-left: auto;
+    line-height: 40px;
+}
+
+gnb.gnb .bookmark-num{
+    margin-left: auto;
+    line-height: 40px;
+}
+
+/* .bookmark-contents */
+.bookmark-contents {
+    margin-left: 10px;
+}
